@@ -16,3 +16,8 @@
 # ARCHIVE_DEST="$HOME/Downloads/Archive"
 # DOCUMENT_DEST="$HOME/Downloads/Document"
 # PROJECT_DEST="$HOME/project"
+
+# Powerlevel10k preset copied to ~/.p10k.zsh (theme's config/*.zsh):
+#   rainbow (default, needs a Nerd Font), lean, lean-8colors, classic, pure, robbyrussell
+#   none = don't write ~/.p10k.zsh, so `p10k configure` runs (pick Rainbow + ASCII for no font)
+# KINARYA_P10K=rainbow

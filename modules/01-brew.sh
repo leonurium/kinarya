@@ -6,6 +6,11 @@ module_brew(){
       dim "[dry-run] install Homebrew"
     else
       info "Installing Homebrew (you may be asked for your password)"
+      if ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables >/dev/null 2>&1; then
+        warn "Xcode Command Line Tools are missing — Homebrew downloads them first (~1-3 GB)."
+        warn "This runs via Apple Software Update, shows no progress bar, and can take a long time."
+        warn "Check progress in another Terminal:  sudo tail -f /var/log/install.log"
+      fi
       /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     fi
   else

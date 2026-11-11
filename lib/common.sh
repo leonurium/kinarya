@@ -57,6 +57,20 @@ ensure_profile_line(){
   ok "added to $file: $line"
 }
 
+replace_or_append_line(){
+  local file=$1 pattern=$2 line=$3 tmp
+  if [[ $DRY_RUN == true ]]; then dim "[dry-run] set in $file: $line"; return 0; fi
+  [[ -f $file ]] || : > "$file"
+  tmp=$(mktemp) || return 1
+  if grep -qE "$pattern" "$file" 2>/dev/null; then
+    sed -E "s|$pattern.*|$line|" "$file" > "$tmp" || { rm -f "$tmp"; return 1; }
+  else
+    cp "$file" "$tmp"
+    printf '%s\n' "$line" >> "$tmp"
+  fi
+  mv "$tmp" "$file"
+}
+
 pause(){
   if [[ $ASSUME_YES == true ]]; then return 0; fi
   printf '%s' "Press Enter to continue… "

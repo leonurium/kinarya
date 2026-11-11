@@ -44,9 +44,10 @@ State lives in `~/.kinarya/state`; completed steps are skipped on re-run unless 
 | 4 | `xcode` | Picks Xcode `.xip` version(s), expands, installs as `/Applications/Xcode_<ver>.app`, sets up CLT + `xcode-select` + license, adds simulator runtimes |
 | 5 | `workspaces` | Copies `Archive` → `~/Downloads/Archive`, `Document` → `~/Downloads/Document`, `project` → `~/project` |
 | 6 | `flutter` | Picks the Flutter zip matching this Mac's chip (`arm64`/`x64`), unzips it into `~/project`, and adds `~/project/flutter/bin` to `~/.zprofile` |
-| 7 | `gh` | Installs GitHub CLI, signs in via browser, and sets global `user.name` / `user.email` |
-| 8 | `prefs` | Dock (size/magnification/auto-hide/icons), trackpad tap-to-click, clock seconds, battery % |
-| 9 | `finalize` | Prints the manual checklist (Apple ID, Find My, Location, More Space, sidebar, announce time) |
+| 7 | `zsh` | Installs Oh My Zsh, clones the Powerlevel10k theme, sets `ZSH_THEME="powerlevel10k/powerlevel10k"`, and applies a preset as `~/.p10k.zsh` (default **rainbow**; override with `KINARYA_P10K`) |
+| 8 | `gh` | Installs GitHub CLI, signs in via browser, and sets global `user.name` / `user.email` |
+| 9 | `prefs` | Dock (size/magnification/auto-hide/icons), trackpad tap-to-click, clock seconds, battery % |
+| 10 | `finalize` | Prints the manual checklist (Apple ID, Find My, Location, More Space, sidebar, announce time, Nerd Font) |
 
 ### Installer handling
 
@@ -72,3 +73,20 @@ State lives in `~/.kinarya/state`; completed steps are skipped on re-run unless 
 
 kinarya is self-contained — copy this whole folder onto the USB drive (e.g. the `MacOS` folder or
 the drive root) and run `./kinarya` there. Nothing else needs to be installed first.
+
+## Troubleshooting: the first run looks "stuck" on Homebrew
+
+When Homebrew is missing, its installer also installs the **Xcode Command Line Tools** via Apple
+Software Update — a large (~1–3 GB) download with **no progress bar** that can take a long time.
+The terminal is not frozen; it is downloading. Check from a second Terminal window:
+
+```sh
+ps aux | grep -iE 'softwareupdate|installer' | grep -v grep   # is it running
+sudo du -sh /Library/Updates 2>/dev/null                       # growing = still downloading
+sudo tail -f /var/log/install.log                              # live install log
+pkgutil --pkg-info=com.apple.pkg.CLTools_Executables && xcode-select -p  # done when it prints a version
+```
+
+If it truly hangs (no process, no log growth), run `xcode-select --install` first, let it finish,
+then re-run kinarya — the CLT will already be present.
+

@@ -25,7 +25,7 @@ if [[ -d "$KINARYA_ROOT/modules" ]]; then
 fi
 unset _lib _mod
 
-STEPS=(brew core software xcode workspaces flutter gh prefs finalize)
+STEPS=(brew core software xcode workspaces flutter zsh gh prefs finalize)
 
 trap 'stop_sudo' EXIT
 
@@ -58,6 +58,7 @@ step_label(){
     xcode)      echo "Xcode, Command Line Tools + simulators" ;;
     workspaces) echo "Archive / Document / project" ;;
     flutter)    echo "Flutter SDK (arch-matched, adds PATH)" ;;
+    zsh)        echo "Oh My Zsh + Powerlevel10k" ;;
     gh)         echo "GitHub CLI + login + git identity" ;;
     prefs)      echo "macOS preferences (dock, trackpad, clock, battery)" ;;
     finalize)   echo "Finalize (manual checklist)" ;;
