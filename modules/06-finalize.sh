@@ -21,6 +21,9 @@ module_finalize(){
        Install the MesloLGS NF font, then select it in your terminal profile
        (Terminal: Settings → Profiles → Text; iTerm2: Settings → Profiles → Text)
        Powerlevel10k without it shows boxes instead of icons.
+  9. Xcode accounts
+       Open Xcode → Settings → Accounts and sign in to your Apple ID
+       (and add your GitHub account) — not scriptable (GUI + 2FA).
 
 EOF
   ok "Review the items above to finish setup."

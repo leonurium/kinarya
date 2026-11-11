@@ -15,10 +15,42 @@ install_item(){
   esac
 }
 
+pkg_identifiers(){
+  local pkg=$1 dir f
+  dir=$(mktemp -d) || return 0
+  if command -v xar >/dev/null 2>&1; then
+    while IFS= read -r f; do
+      ( cd "$dir" && xar -xf "$pkg" "$f" 2>/dev/null ) || true
+    done < <(xar -tf "$pkg" 2>/dev/null | grep -E '^(Distribution|PackageInfo)$')
+    if [[ -f $dir/PackageInfo ]]; then
+      grep -oE 'identifier="[^"]+"' "$dir/PackageInfo" 2>/dev/null | sed -E 's/.*="//; s/"$//'
+    fi
+    if [[ -f $dir/Distribution ]]; then
+      grep -oE 'id="[^"]+"' "$dir/Distribution" 2>/dev/null | sed -E 's/.*="//; s/"$//'
+    fi
+  fi
+  rm -rf "$dir"
+}
+
+pkg_is_installed(){
+  local pkg=$1 id
+  for id in $(pkg_identifiers "$pkg"); do
+    if pkgutil --pkg-info "$id" >/dev/null 2>&1; then return 0; fi
+  done
+  return 1
+}
+
 install_pkg(){
+  local pkg=$1
+  if pkg_is_installed "$pkg"; then
+    if ! confirm "$(basename "$pkg") looks already installed. Reinstall anyway?" n; then
+      dim "skipped $(basename "$pkg")"
+      return 0
+    fi
+  fi
   need_sudo || return 1
-  info "Installing package $(basename "$1")"
-  run_cmd sudo installer -pkg "$1" -target /
+  info "Installing package $(basename "$pkg")"
+  run_cmd sudo installer -pkg "$pkg" -target /
 }
 
 install_app(){

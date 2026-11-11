@@ -47,11 +47,17 @@ module_software(){
   if [[ ${#sel[@]} -eq 0 ]]; then warn "Nothing selected"; return 0; fi
 
   ensure_dir "$SOFTWARE_DEST"
-  local src name
+  local src name dest
   for idx in "${sel[@]}"; do
     src="${USB_ENTRIES[$((idx-1))]}"
-    info "Copying $(basename "$src") → $SOFTWARE_DEST"
-    run_cmd ditto "$src" "$SOFTWARE_DEST/$(basename "$src")"
+    name=$(basename "$src")
+    dest="$SOFTWARE_DEST/$name"
+    if [[ -f $dest ]] && [[ -f $src ]] && [[ "$(stat -f%z "$src" 2>/dev/null)" == "$(stat -f%z "$dest" 2>/dev/null)" ]]; then
+      dim "already copied: $name"
+      continue
+    fi
+    info "Copying $name → $SOFTWARE_DEST"
+    run_cmd ditto "$src" "$dest"
   done
   ok "Copied ${#sel[@]} item(s) to $SOFTWARE_DEST"
 
