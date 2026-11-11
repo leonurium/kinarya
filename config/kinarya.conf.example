@@ -1,0 +1,18 @@
+# kinarya configuration (optional).
+# Copy this file to ~/.kinarya/kinarya.conf (or config/kinarya.conf) to override defaults.
+
+# Force a specific USB mount point instead of auto-detecting:
+# USB_ROOT="/Volumes/SOFTWARE"
+
+# Override the source folders:
+# MACOS_DIR="$USB_ROOT/MacOS"
+# WS_DIR="$USB_ROOT/Workspaces"
+# ARCHIVE_SRC="$WS_DIR/Archive"
+# DOCUMENT_SRC="$WS_DIR/Document"
+# PROJECT_SRC="$WS_DIR/project"
+
+# Override the destinations:
+# SOFTWARE_DEST="$HOME/Downloads/Software"
+# ARCHIVE_DEST="$HOME/Downloads/Archive"
+# DOCUMENT_DEST="$HOME/Downloads/Document"
+# PROJECT_DEST="$HOME/project"

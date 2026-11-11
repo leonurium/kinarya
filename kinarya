@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+KINARYA_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export KINARYA_ROOT
+
+DRY_RUN=false
+ASSUME_YES=false
+FORCE=false
+BATCH=false
+RUN_ALL=false
+LIST=false
+DO_CLEAR=false
+STEP=""
+CLEAR=""
+export DRY_RUN ASSUME_YES FORCE
+
+for _lib in common state config fs install; do
+  source "$KINARYA_ROOT/lib/$_lib.sh"
+done
+if [[ -d "$KINARYA_ROOT/modules" ]]; then
+  for _mod in "$KINARYA_ROOT"/modules/*.sh; do
+    if [[ -e "$_mod" ]]; then source "$_mod"; fi
+  done
+fi
+unset _lib _mod
+
+STEPS=(brew core software xcode workspaces flutter gh prefs finalize)
+
+trap 'stop_sudo' EXIT
+
+usage(){
+  cat <<EOF
+kinarya — macOS new-device setup
+
+Usage: kinarya [options]
+
+Options:
+  -a, --all          Run every step in order (skips done steps unless --force)
+  -s, --step NAME    Run a single step (name or number)
+  -f, --force        Re-run steps even if already marked done
+  -n, --dry-run      Show what would happen without changing anything
+  -y, --yes          Assume yes for all prompts
+      --no-color     Disable colored output
+  -l, --list         List steps and their status
+  -c, --clear [NAME] Clear saved state (all steps, or one)
+  -h, --help         Show this help
+
+Steps: ${STEPS[*]}
+EOF
+}
+
+step_label(){
+  case "$1" in
+    brew)       echo "Homebrew" ;;
+    core)       echo "Core tools (mole, node, cocoapods)" ;;
+    software)   echo "Copy + install software from USB" ;;
+    xcode)      echo "Xcode, Command Line Tools + simulators" ;;
+    workspaces) echo "Archive / Document / project" ;;
+    flutter)    echo "Flutter SDK (arch-matched, adds PATH)" ;;
+    gh)         echo "GitHub CLI + login + git identity" ;;
+    prefs)      echo "macOS preferences (dock, trackpad, clock, battery)" ;;
+    finalize)   echo "Finalize (manual checklist)" ;;
+    *)          echo "$1" ;;
+  esac
+}
+
+resolve_step(){
+  local s=$1 i
+  if [[ $s =~ ^[0-9]+$ ]] && [[ $s -ge 1 && $s -le ${#STEPS[@]} ]]; then
+    printf '%s\n' "${STEPS[$((s-1))]}"; return 0
+  fi
+  for i in "${STEPS[@]}"; do
+    if [[ $i == "$s" ]]; then printf '%s\n' "$i"; return 0; fi
+  done
+  return 1
+}
+
+run_step(){
+  local id=$1 fn="module_$1"
+  if ! declare -F "$fn" >/dev/null 2>&1; then err "No module for step '$id'"; return 1; fi
+  if state_done "$id" && [[ $FORCE != true ]]; then
+    if [[ $BATCH == true ]]; then dim "skip '$id' (already done)"; return 0; fi
+    if ! confirm "Step '$id' already done. Re-run it?" n; then dim "skip '$id'"; return 0; fi
+  fi
+  header "▶ $id — $(step_label "$id")"
+  if "$fn"; then state_mark "$id"; ok "Step '$id' complete"
+  else err "Step '$id' failed"; return 1; fi
+}
+
+run_all(){
+  local id
+  for id in "${STEPS[@]}"; do
+    run_step "$id" || { warn "Stopping: step '$id' failed"; return 1; }
+  done
+}
+
+status(){
+  local id
+  header "Step status"
+  for id in "${STEPS[@]}"; do
+    if state_done "$id"; then printf '  %s✔%s %-12s %s\n' "$C_GREEN" "$C_RESET" "$id" "$(step_label "$id")"
+    else printf '  %s·%s %-12s %s\n' "$C_DIM" "$C_RESET" "$id" "$(step_label "$id")"; fi
+  done
+  printf '\n  %sstate:%s %s\n' "$C_DIM" "$C_RESET" "$STATE_FILE"
+  show_paths
+}
+
+menu(){
+  local choice i id mark
+  while true; do
+    printf '\n%s%s%s %s\n' "$C_BOLD" "$C_CYAN" "kinarya" "$C_RESET"
+    for i in "${!STEPS[@]}"; do
+      id="${STEPS[$i]}"; mark="  "
+      if state_done "$id"; then mark="${C_GREEN}✔${C_RESET} "; fi
+      printf '  %2d) %b%-46s %s\n' "$((i+1))" "$mark" "$(step_label "$id")" "${C_DIM}$id${C_RESET}"
+    done
+    printf '   a) Run all    s) Status    c) Clear state    q) Quit\n'
+    printf 'Choice: '
+    read -r choice || choice=q
+    case "$choice" in
+      q|Q) break ;;
+      a|A) run_all || true ;;
+      s|S) status ;;
+      c|C) if confirm "Clear all saved state?" n; then state_clear ""; ok "state cleared"; fi ;;
+      "") : ;;
+      *) if [[ $choice =~ ^[0-9]+$ ]] && [[ $choice -ge 1 && $choice -le ${#STEPS[@]} ]]; then
+           run_step "${STEPS[$((choice-1))]}" || true
+         else warn "Enter a number, a, s, c, or q"; fi ;;
+    esac
+  done
+}
+
+main(){
+  parse_args "$@"
+  state_init
+  config_load
+
+  if ! is_macos; then err "kinarya targets macOS only"; exit 1; fi
+
+  if [[ $LIST == true ]]; then status; exit 0; fi
+  if [[ $DO_CLEAR == true ]]; then state_clear "$CLEAR"; ok "cleared state: ${CLEAR:-all}"; exit 0; fi
+
+  if [[ -n $STEP ]]; then
+    local id; id=$(resolve_step "$STEP") || { err "Unknown step: $STEP"; exit 1; }
+    run_step "$id"; exit $?
+  fi
+  if [[ $RUN_ALL == true ]]; then BATCH=true; run_all; exit $?; fi
+  menu
+}
+
+parse_args(){
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -a|--all) RUN_ALL=true ;;
+      -s|--step) STEP="${2:-}"; shift ;;
+      -f|--force) FORCE=true ;;
+      -n|--dry-run) DRY_RUN=true ;;
+      -y|--yes) ASSUME_YES=true ;;
+      --no-color) export NO_COLOR=1 ;;
+      -l|--list) LIST=true ;;
+      -c|--clear) DO_CLEAR=true; if [[ -n "${2:-}" && ${2:-} != -* ]]; then CLEAR="$2"; shift; fi ;;
+      -h|--help) usage; exit 0 ;;
+      *) err "Unknown option: $1"; usage; exit 1 ;;
+    esac
+    shift
+  done
+}
+
+main "$@"
