@@ -46,7 +46,7 @@ State lives in `~/.kinarya/state`; completed steps are skipped on re-run unless 
 | 6 | `flutter` | Picks the Flutter zip matching this Mac's chip (`arm64`/`x64`), unzips it into `~/project`, and adds `~/project/flutter/bin` to `~/.zprofile` |
 | 7 | `zsh` | Installs Oh My Zsh, clones the Powerlevel10k theme, sets `ZSH_THEME="powerlevel10k/powerlevel10k"`, and applies a preset as `~/.p10k.zsh` (default **rainbow**; override with `KINARYA_P10K`) |
 | 8 | `gh` | Installs GitHub CLI, signs in via browser, and sets global `user.name` / `user.email` |
-| 9 | `prefs` | Dock (size/magnification/auto-hide/icons), trackpad tap-to-click, clock seconds, battery % |
+| 9 | `prefs` | Dock (size/magnification/auto-hide/icons), Finder (status/path/tab bars), trackpad tap-to-click, clock seconds, battery % |
 | 10 | `finalize` | Prints the manual checklist (Apple ID, Find My, Location, More Space, sidebar, announce time, Nerd Font) |
 
 ### Installer handling

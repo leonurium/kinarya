@@ -60,6 +60,15 @@ prune_dock_items(){
   ok "Dock icons reset (existing entries kept, bookmarks preserved)"
 }
 
+pref_finder(){
+  info "Finder: show status bar, path bar and tab bar"
+  run_cmd defaults write com.apple.finder ShowStatusBar -bool true
+  run_cmd defaults write com.apple.finder ShowPathbar -bool true
+  run_cmd defaults write com.apple.finder ShowTabView -bool true
+  run_cmd defaults write com.apple.finder AppleWindowTabbingMode -string always
+  run_cmd killall Finder 2>/dev/null || true
+}
+
 pref_trackpad(){
   info "Trackpad: tap to click"
   run_cmd defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
@@ -82,6 +91,7 @@ pref_battery(){
 
 module_prefs(){
   pref_dock
+  pref_finder
   pref_trackpad
   pref_clock
   pref_battery

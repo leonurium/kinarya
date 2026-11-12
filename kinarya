@@ -60,7 +60,7 @@ step_label(){
     flutter)    echo "Flutter SDK (arch-matched, adds PATH)" ;;
     zsh)        echo "Oh My Zsh + Powerlevel10k" ;;
     gh)         echo "GitHub CLI + login + git identity" ;;
-    prefs)      echo "macOS preferences (dock, trackpad, clock, battery)" ;;
+    prefs)      echo "macOS preferences (dock, finder, trackpad, clock, battery)" ;;
     finalize)   echo "Finalize (manual checklist)" ;;
     *)          echo "$1" ;;
   esac
