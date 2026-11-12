@@ -61,12 +61,11 @@ prune_dock_items(){
 }
 
 pref_finder(){
-  info "Finder: show status bar, path bar and tab bar"
+  info "Finder: show status bar and path bar"
   run_cmd defaults write com.apple.finder ShowStatusBar -bool true
   run_cmd defaults write com.apple.finder ShowPathbar -bool true
-  run_cmd defaults write com.apple.finder ShowTabView -bool true
-  run_cmd defaults write com.apple.finder AppleWindowTabbingMode -string always
   run_cmd killall Finder 2>/dev/null || true
+  dim "Finder's tab bar is per-window (no reliable global default) — press ⇧⌘T in a Finder window."
 }
 
 pref_trackpad(){
